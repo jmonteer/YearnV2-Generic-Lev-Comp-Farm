@@ -28,7 +28,6 @@ contract Strategy is BaseStrategy, ICallee {
     using SafeERC20 for IERC20;
     using Address for address;
     using SafeMath for uint256;
-    event Number(string name, uint number);
 
     // @notice emitted when trying to do Flash Loan. flashLoan address is 0x00 when no flash loan used
     event Leverage(uint256 amountRequested, uint256 amountGiven, bool deficit, address flashLoan);
@@ -79,7 +78,7 @@ contract Strategy is BaseStrategy, ICallee {
     receive() external payable {}
 
     function name() external override view returns (string memory){
-        return "GenLevCompV2";
+        return "StrategyGenericLevCompFarm";
     }
 
     function initialize(
@@ -374,13 +373,13 @@ contract Strategy is BaseStrategy, ICallee {
             } else if (wantBalance > _profit.add(_debtOutstanding)) {
                 _debtPayment = _debtOutstanding;
             } else {
-                _debtPayment = wantBalance.sub(_profit);
+                _debtPayment = wantBalance - _profit;
             }
 
         } else {
             //we will lose money until we claim comp then we will make money
             //this has an unintended side effect of slowly lowering our total debt allowed
-            _loss = debt.sub(balance);
+            _loss = debt - balance;
             _debtPayment = Math.min(wantBalance, _debtOutstanding);
         }
     }
@@ -409,7 +408,7 @@ contract Strategy is BaseStrategy, ICallee {
             return;
         }
 
-        (uint256 position, bool deficit) = _calculateDesiredPosition(_wantBal.sub(_debtOutstanding), true);
+        (uint256 position, bool deficit) = _calculateDesiredPosition(_wantBal - _debtOutstanding, true);
 
         //if we are below minimun want change it is not worth doing
         //need to be careful in case this pushes to liquidation
@@ -761,7 +760,7 @@ contract Strategy is BaseStrategy, ICallee {
             leveragedAmount = maxLeverage;
         }
         if(leveragedAmount > 10){
-            leveragedAmount = leveragedAmount.sub(uint256(10));
+            leveragedAmount = leveragedAmount -10;
             cToken.borrow(leveragedAmount);
             cToken.mint(balanceOfToken(address(want)));
         }
@@ -832,7 +831,7 @@ contract Strategy is BaseStrategy, ICallee {
     }
 
     function mgtm_check() internal {
-      require(msg.sender == governance() || msg.sender == vault.management() || msg.sender == strategist);
+      require(msg.sender == governance() || msg.sender == strategist);
     }
 
     modifier management() {
