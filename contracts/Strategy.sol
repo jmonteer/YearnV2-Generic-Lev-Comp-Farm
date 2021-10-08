@@ -106,7 +106,7 @@ contract Strategy is BaseStrategy, ICallee {
         profitFactor = 100; // multiple before triggering harvest
 
         minCompToSell = 0.1 ether;
-        collateralTarget = 0.63 ether;
+        collateralTarget = 0.74 ether;
         blocksToLiquidationDangerZone = 46500;
         DyDxActive = true;
     }
