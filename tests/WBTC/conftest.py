@@ -1,6 +1,6 @@
 import pytest
 from brownie import Wei, config, chain
-from brownie import network
+from brownie import network, Contract
 
 @pytest.fixture(scope="function", autouse=True)
 def isolation(fn_isolation):
@@ -38,11 +38,22 @@ def weth(interface):
 def whale(accounts):
     yield accounts.at("0x9ff58f4ffb29fa2266ab25e75e2a8b3503311656", force=True)
 
+@pytest.fixture
+def factory(LevCompFactory, strategist, vault, cToken):
+    factory = strategist.deploy(LevCompFactory, vault, cToken)
+    yield factory
+
 @pytest.fixture()
 def strategist(accounts, whale, currency):
     decimals = currency.decimals()
     currency.transfer(accounts[1], 100 * (10 ** decimals), {"from": whale})
     yield accounts[1]
+
+@pytest.fixture(autouse=True)
+def refill_comptroller(comp):
+    comptroller = Contract("0x3d9819210A31b4961b30EF54bE2aeD79B9c9Cd3B")
+    reservoir = Contract("0x2775b1c75658Be0F640272CCb8c72ac986009e38")
+    comp.transfer(comptroller, comp.balanceOf(reservoir), {'from': reservoir})
 
 @pytest.fixture
 def gov(accounts):
@@ -57,7 +68,7 @@ def user(accounts, whale, currency):
 def guardian(accounts):
     # YFI Whale, probably
     yield accounts[2]
-
+    
 @pytest.fixture
 def keeper(accounts):
     # This is our trusty bot!
