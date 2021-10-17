@@ -81,14 +81,6 @@ contract Strategy is BaseStrategy, ICallee {
         return "GenLevCompV2";
     }
 
-    function initialize(
-        address _vault,
-        address _cToken
-    ) external {
-        _initialize(_vault, msg.sender, msg.sender, msg.sender);
-        _initializeThis(_cToken);
-    }
-
     function _initializeThis(address _cToken) internal {
         cToken = CErc20I(address(_cToken));
 
@@ -114,7 +106,7 @@ contract Strategy is BaseStrategy, ICallee {
         profitFactor = 100; // multiple before triggering harvest
 
         minCompToSell = 0.1 ether;
-        collateralTarget = 0.63 ether;
+        collateralTarget = 0.74 ether;
         blocksToLiquidationDangerZone = 46500;
         DyDxActive = true;
     }
@@ -814,24 +806,8 @@ contract Strategy is BaseStrategy, ICallee {
 
     // -- Internal Helper functions -- //
 
-    function ethToWant(uint256 _amtInWei) public view override returns (uint256) {
-        return priceCheck(weth, address(want), _amtInWei);
-    }
-
-    function liquidateAllPositions() internal override returns (uint256 _amountFreed) {
-        (_amountFreed,) = liquidatePosition(vault.debtOutstanding());
-        (uint256 deposits, uint256 borrows) = getCurrentPosition();
-
-        uint256 position = deposits.sub(borrows);
-
-        //we want to revert if we can't liquidateall
-        if(!forceMigrate) {
-          require(position < minWant);
-        }
-    }
-
     function mgtm_check() internal {
-      require(msg.sender == governance() || msg.sender == vault.management() || msg.sender == strategist);
+      require(msg.sender == governance() || msg.sender == strategist);
     }
 
     modifier management() {
