@@ -101,8 +101,8 @@ contract Strategy is BaseStrategy, IERC3156FlashBorrower {
         maxReportDelay = 86400; // once per 24 hours
         profitFactor = 100; // multiple before triggering harvest
         debtThreshold = 1e30;
-        // set minWant to 1e-3 want
-        minWant = uint256(uint256(10)**uint256((IERC20Extended(address(want))).decimals())).div(1000);
+        // set minWant to 1e-5 want
+        minWant = uint256(uint256(10)**uint256((IERC20Extended(address(want))).decimals())).div(1e5);
         minCompToSell = 0.1 ether;
         collateralTarget = 0.63 ether;
         collatRatioDAI = 0.73 ether;
@@ -582,6 +582,16 @@ contract Strategy is BaseStrategy, IERC3156FlashBorrower {
                 _amountFreed = _amountNeeded;
             }
         }
+
+        // To prevent the vault from moving on to the next strategy in the queue
+        // when we return the amountRequested minus dust, take a dust sized loss
+        if (_amountFreed < _amountNeeded) {
+            uint256 diff = _amountNeeded.sub(_amountFreed);
+            if (diff <= minWant) {
+                _loss = diff;
+            }
+        }
+
     }
 
     function _claimComp() internal {
