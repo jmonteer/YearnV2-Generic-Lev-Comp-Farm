@@ -169,6 +169,12 @@ def live_vault(registry, token):
 
 
 @pytest.fixture
+def reentry_test(user, ReentryTest):
+    reentry_test = user.deploy(ReentryTest)
+    yield reentry_test
+
+
+@pytest.fixture
 def strategy(strategist, keeper, vault, Strategy, gov, cToken):
     strategy = strategist.deploy(Strategy, vault, cToken)
     strategy.setKeeper(keeper)
