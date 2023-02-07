@@ -33,7 +33,7 @@ library FlashMintLib {
     address private constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
     address private constant WBTC = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599;
     ComptrollerI private constant COMPTROLLER = ComptrollerI(0x3d9819210A31b4961b30EF54bE2aeD79B9c9Cd3B);
-    address public constant LENDER = 0x1EB4CF3A948E7D72A198fe073cCb8C7a948cD853;
+    address public constant LENDER = 0x60744434d6339a6B27d73d9Eda62b6F66a0a04FA;
     bytes32 public constant CALLBACK_SUCCESS = keccak256("ERC3156FlashBorrower.onFlashLoan");
 
     function doFlashMint(
