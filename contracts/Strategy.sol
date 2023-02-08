@@ -594,7 +594,7 @@ contract Strategy is BaseStrategy, IERC3156FlashBorrower {
         if (_amountFreed < _amountNeeded) {
             uint256 diff = _amountNeeded.sub(_amountFreed);
             if (diff <= minWant) {
-                _loss = diff;
+                _loss += diff;
             }
         }
 
