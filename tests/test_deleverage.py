@@ -100,7 +100,6 @@ def test_large_manual_deleverage_to_zero(
     chain.sleep(4 * 3600)
     chain.mine(1000)
 
-    strategy.harvest({"from": strategist})
     utils.strategy_status(vault, strategy)
 
     (supply, borrow) = strategy.getCurrentPosition()
@@ -127,9 +126,15 @@ def test_large_manual_deleverage_to_zero(
 
     deposits, borrows = strategy.getCurrentPosition()
     while deposits > strategy.minWant():
-        strategy.manualReleaseWant(deposits-borrows/(strategy.collateralTarget()/1e18), {"from": gov})
+        release_amount = deposits - borrows / (strategy.collateralTarget() / 1e18)
+        if release_amount <= 0:
+            break
+        strategy.manualReleaseWant(
+            (release_amount),
+            {"from": gov},
+        )
         deposits, borrows = strategy.getCurrentPosition()
-    
+
     assert strategy.getCurrentPosition().dict()["deposits"] <= strategy.minWant()
 
     utils.sleep()
@@ -138,9 +143,8 @@ def test_large_manual_deleverage_to_zero(
         pytest.approx(strategy.estimatedTotalAssets(), rel=RELATIVE_APPROX) == amount
     ) or strategy.estimatedTotalAssets() > amount
 
+    strategy.setCollateralTarget(0, {"from": gov})
     vault.revokeStrategy(strategy.address, {"from": gov})
-    utils.sleep(1)
-    strategy.setFlashMintActive(False, {"from": gov})
     strategy.harvest({"from": strategist})
     if strategy.estimatedTotalAssets() > strategy.minWant():
         strategy.harvest({"from": strategist})
