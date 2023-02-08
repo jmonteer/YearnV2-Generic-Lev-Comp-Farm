@@ -22,13 +22,15 @@ def test_clone(
     )
     cloned_strategy = factory.cloneLevComp(vault, cToken, {"from": gov}).return_value
     cloned_strategy = Strategy.at(cloned_strategy)
+    actions.generate_profit(strategy, 50)
 
     # free funds from old strategy
     vault.revokeStrategy(strategy, {"from": gov})
-    strategy.setMinCompToSell(1e8, {"from": gov})
+    strategy.setMinCompToSell(1e10, {"from": gov})
     strategy.harvest({"from": gov})
 
     while strategy.estimatedTotalAssets() > strategy.minWant():
+        utils.sleep(1)
         strategy.setDoHealthCheck(False, {"from": gov})
         strategy.harvest({"from": gov})
         utils.sleep(1)

@@ -19,6 +19,7 @@ def test_large_deleverage_to_zero(
 
     utils.strategy_status(vault, strategy)
 
+    strategy.setMinCompToSell(1e10, {"from": gov})
     vault.revokeStrategy(strategy.address, {"from": gov})
     n = 0
     while vault.debtOutstanding(strategy) > strategy.minWant() and n < 6:
@@ -93,7 +94,7 @@ def test_large_manual_deleverage_to_zero(
     utils.sleep(1)
     strategy.harvest({"from": strategist})
     # to realise profits
-    strategy.setMinCompToSell(0, {"from": gov})
+    strategy.setMinCompToSell(1e10, {"from": gov})
     assert pytest.approx(strategy.estimatedTotalAssets(), rel=RELATIVE_APPROX) == amount
 
     chain.sleep(4 * 3600)
@@ -105,7 +106,7 @@ def test_large_manual_deleverage_to_zero(
     (supply, borrow) = strategy.getCurrentPosition()
 
     n = 0
-    while borrow > strategy.minWant():
+    while borrow >= strategy.minWant():
         utils.sleep(1)
         (supply, borrow) = strategy.getCurrentPosition()
         theo_min_supply = borrow / (((strategy.collateralTarget() + 1.8 * 1e16) / 1e18))
@@ -138,6 +139,8 @@ def test_large_manual_deleverage_to_zero(
     ) or strategy.estimatedTotalAssets() > amount
 
     vault.revokeStrategy(strategy.address, {"from": gov})
+    utils.sleep(1)
+    strategy.setFlashMintActive(False, {"from": gov})
     strategy.harvest({"from": strategist})
     if strategy.estimatedTotalAssets() > strategy.minWant():
         strategy.harvest({"from": strategist})
