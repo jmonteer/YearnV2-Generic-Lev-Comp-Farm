@@ -63,7 +63,7 @@ contract Strategy is BaseStrategy, IERC3156FlashBorrower {
     }
 
     function name() external view override returns (string memory) {
-        return "GenLevCompV3";
+        return "GenLevCompV4";
     }
 
     function initialize(address _vault, address _cToken) external {
