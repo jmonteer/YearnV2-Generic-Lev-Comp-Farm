@@ -16,7 +16,7 @@ def test_shutdown(chain, token, vault, strategy, amount, gov, user, RELATIVE_APP
 
     # Generate profit
     profit_amount = actions.generate_profit(strategy, 200)
-    strategy.setMinCompToSell(1e5)
+    strategy.setMinCompToSell(1e10)
     # Set debtRatio to 0, then harvest, check that accounting worked as expected
     vault.updateStrategyDebtRatio(strategy, 0, {"from": gov})
     strategy.harvest({"from": gov})
