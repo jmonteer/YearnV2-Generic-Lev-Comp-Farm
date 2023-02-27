@@ -14,7 +14,7 @@ def test_profitable_harvest(
     total_assets = strategy.estimatedTotalAssets()
     assert pytest.approx(total_assets, rel=RELATIVE_APPROX) == amount
 
-    blocks_to_sleep = 50
+    blocks_to_sleep = 250
     profit_amount = actions.generate_profit(strategy, blocks_to_sleep)
     strategy.setMinCompToSell(1e3)
     # check that estimatedTotalAssets estimates correctly

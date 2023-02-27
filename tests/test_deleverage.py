@@ -19,6 +19,7 @@ def test_large_deleverage_to_zero(
 
     utils.strategy_status(vault, strategy)
 
+    strategy.setMinCompToSell(1e10, {"from": gov})
     vault.revokeStrategy(strategy.address, {"from": gov})
     n = 0
     while vault.debtOutstanding(strategy) > strategy.minWant() and n < 6:
@@ -93,19 +94,18 @@ def test_large_manual_deleverage_to_zero(
     utils.sleep(1)
     strategy.harvest({"from": strategist})
     # to realise profits
-    strategy.setMinCompToSell(0, {"from": gov})
+    strategy.setMinCompToSell(1e10, {"from": gov})
     assert pytest.approx(strategy.estimatedTotalAssets(), rel=RELATIVE_APPROX) == amount
 
     chain.sleep(4 * 3600)
     chain.mine(1000)
 
-    strategy.harvest({"from": strategist})
     utils.strategy_status(vault, strategy)
 
     (supply, borrow) = strategy.getCurrentPosition()
 
     n = 0
-    while borrow > strategy.minWant():
+    while borrow >= strategy.minWant():
         utils.sleep(1)
         (supply, borrow) = strategy.getCurrentPosition()
         theo_min_supply = borrow / (((strategy.collateralTarget() + 1.8 * 1e16) / 1e18))
@@ -126,9 +126,15 @@ def test_large_manual_deleverage_to_zero(
 
     deposits, borrows = strategy.getCurrentPosition()
     while deposits > strategy.minWant():
-        strategy.manualReleaseWant(deposits-borrows/(strategy.collateralTarget()/1e18), {"from": gov})
+        release_amount = deposits - borrows / (strategy.collateralTarget() / 1e18)
+        if release_amount <= 0:
+            break
+        strategy.manualReleaseWant(
+            (release_amount),
+            {"from": gov},
+        )
         deposits, borrows = strategy.getCurrentPosition()
-    
+
     assert strategy.getCurrentPosition().dict()["deposits"] <= strategy.minWant()
 
     utils.sleep()
@@ -137,6 +143,7 @@ def test_large_manual_deleverage_to_zero(
         pytest.approx(strategy.estimatedTotalAssets(), rel=RELATIVE_APPROX) == amount
     ) or strategy.estimatedTotalAssets() > amount
 
+    strategy.setCollateralTarget(0, {"from": gov})
     vault.revokeStrategy(strategy.address, {"from": gov})
     strategy.harvest({"from": strategist})
     if strategy.estimatedTotalAssets() > strategy.minWant():

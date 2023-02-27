@@ -62,13 +62,13 @@ token_addresses = {
 # TODO: uncomment those tokens you want to test as want
 @pytest.fixture(
     params=[
-        'WBTC', # WBTC
+        # 'WBTC', # WBTC
         # "YFI",  # YFI
         # "WETH",  # WETH
         # 'LINK', # LINK
         # 'USDT', # USDT
         "DAI",  # DAI
-        'USDC', # USDC
+        "USDC",  # USDC
     ],
     scope="session",
     autouse=True,
@@ -94,8 +94,8 @@ def cToken(token):
 
 
 whale_addresses = {
-    "WBTC": "0xe78388b4ce79068e89bf8aa7f218ef6b9ab0e9d0",
-    "WETH": "0xe78388b4ce79068e89bf8aa7f218ef6b9ab0e9d0",
+    "WBTC": "0x8EB8a3b98659Cce290402893d0123abb75E3ab28",
+    "WETH": "0x8EB8a3b98659Cce290402893d0123abb75E3ab28",
     "LINK": "0x28c6c06298d514db089934071355e5743bf21d60",
     "YFI": "0x28c6c06298d514db089934071355e5743bf21d60",
     "USDT": "0x47ac0Fb4F2D84898e4D9E7b4DaB3C24507a6D503",
@@ -108,14 +108,15 @@ whale_addresses = {
 def token_whale(token):
     yield whale_addresses[token.symbol()]
 
+
 cToken_whale_addresses = {
     "WBTC": "0x8aceab8167c80cb8b3de7fa6228b889bb1130ee8",
     "WETH": "0x8aceab8167c80cb8b3de7fa6228b889bb1130ee8",
-    "LINK": "0x801CdDB30e3e4519fa98CF242f85c66b7561F4F5", 
+    "LINK": "0x801CdDB30e3e4519fa98CF242f85c66b7561F4F5",
     "YFI": "0x26f6b241f495c68d9b45c336b2f2bf51d1b6ab56",
-    "USDT": "0x3DdfA8eC3052539b6C9549F12cEA2C295cfF5296", 
+    "USDT": "0x3DdfA8eC3052539b6C9549F12cEA2C295cfF5296",
     "USDC": "0xB3BD459e0598ddE1FE84B1d0a1430BE175B5D5be",
-    "DAI": "0x41D207BC7e5D1F44AAF572d4A06cD0EF1Ea2b01b"
+    "DAI": "0x41D207BC7e5D1F44AAF572d4A06cD0EF1Ea2b01b",
 }
 
 
@@ -123,27 +124,33 @@ cToken_whale_addresses = {
 def cToken_whale(token):
     yield cToken_whale_addresses[token.symbol()]
 
+
 @pytest.fixture(autouse=True)
 def withdraw_whale_liquidity(cToken_whale, cToken, token, strategy):
-    borrows = cToken.borrowBalanceCurrent(cToken_whale, {'from': cToken_whale}).return_value
-    supply = cToken.balanceOfUnderlying(cToken_whale, {'from': cToken_whale}).return_value
+    borrows = cToken.borrowBalanceCurrent(
+        cToken_whale, {"from": cToken_whale}
+    ).return_value
+    supply = cToken.balanceOfUnderlying(
+        cToken_whale, {"from": cToken_whale}
+    ).return_value
     print(f"borrow: {borrows/ 10 ** token.decimals()}")
     print(f"supply: {supply/ 10 ** token.decimals()}")
     comptroller = Contract(cToken.comptroller())
-    l, collatFactor, c = comptroller.markets(cToken) 
+    l, collatFactor, c = comptroller.markets(cToken)
 
     amount = supply - borrows / collatFactor * 1e18
 
     print(f"Withdrawing {amount/10**token.decimals()} {token.symbol()}")
     print(f"Available liquidity: {cToken.getCash()/10**token.decimals()}")
-    cToken.redeemUnderlying(amount, {'from': cToken_whale})
+    cToken.redeemUnderlying(amount, {"from": cToken_whale})
     print(f"Available liquidity: {cToken.getCash()/10**token.decimals()}")
 
+
 token_prices = {
-    "WBTC": 35_000,
-    "WETH": 2_000,
-    "LINK": 20,
-    "YFI": 30_000,
+    "WBTC": 25_000,
+    "WETH": 1_700,
+    "LINK": 10,
+    "YFI": 7_000,
     "USDT": 1,
     "USDC": 1,
     "DAI": 1,
@@ -153,7 +160,7 @@ token_prices = {
 @pytest.fixture(autouse=True)
 def amount(token, token_whale, user):
     # this will get the number of tokens (around $1m worth of token)
-    amillion = round(10_000_000 / token_prices[token.symbol()])
+    amillion = round(1_000_000 / token_prices[token.symbol()])
     amount = amillion * 10 ** token.decimals()
     # In order to get some funds for the token you are about to use,
     # it impersonate a whale address
@@ -228,11 +235,11 @@ def cloned_strategy(factory, vault, strategy, cToken, strategist, gov):
     ).return_value
     cloned_strategy = Strategy.at(cloned_strategy)
     vault.revokeStrategy(strategy)
-    vault.addStrategy(cloned_strategy, 10_000, 0, 2 ** 256 - 1, 1_000, {"from": gov})
+    vault.addstrategy(cloned_strategy, 10_000, 0, 2 ** 256 - 1, 0, {"from": gov})
     yield
 
 
-#@pytest.fixture(autouse=True)
+# @pytest.fixture(autouse=True)
 def withdraw_no_losses(vault, token, amount, user):
     yield
     if vault.totalSupply() == 0:
